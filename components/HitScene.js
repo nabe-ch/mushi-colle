@@ -4,8 +4,8 @@
 // キーボード（Enterなど）では操作できない：連打を受けるのは、ボタンではなく、ポインタ（マウス・タッチ）だけに反応する領域
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PALETTE, drawRows } from '@/lib/pixel';
-import { heroGrid, treeGrid, HAMMER_COLORS } from '@/lib/sprites';
-import { HAMMERS, HIT_SECONDS, MAX_STRENGTH, strengthLevel } from '@/lib/game';
+import { heroGrid, treeGrid } from '@/lib/sprites';
+import { HIT_SECONDS, MAX_STRENGTH, strengthLevel } from '@/lib/game';
 import { RARITY } from '@/lib/insects';
 import { playTick, playHit, playCatch, playNew } from '@/lib/sound';
 import InsectArt from './InsectArt';
@@ -45,7 +45,7 @@ function drawBackground(ctx) {
   }
 }
 
-export default function HitScene({ regionLabel, treeLabel, hammerId, onRoll, onExit }) {
+export default function HitScene({ regionLabel, treeLabel, tool, onRoll, onExit }) {
   const canvasRef = useRef(null);
   const [phase, setPhase] = useState('ready'); // ready | counting | hit | fade | results
   const [ui, setUi] = useState({ count: 0, left: HIT_SECONDS });
@@ -65,7 +65,7 @@ export default function HitScene({ regionLabel, treeLabel, hammerId, onRoll, onE
   const onRollRef = useRef(onRoll);
   onRollRef.current = onRoll;
 
-  const hammerColor = HAMMER_COLORS[hammerId];
+  const hammerColor = tool.color;
   const heroRows = useMemo(
     () => ({
       idle: heroGrid('idle', hammerColor),
@@ -112,7 +112,7 @@ export default function HitScene({ regionLabel, treeLabel, hammerId, onRoll, onE
       if (p === 'counting') {
         const elapsed = now - startRef.current;
         if (elapsed >= HIT_MS) {
-          levelRef.current = strengthLevel(countRef.current, hammerId);
+          levelRef.current = strengthLevel(countRef.current, tool);
           phaseRef.current = 'hit';
           hitStartRef.current = now;
           particlesRef.current = Array.from({ length: 28 }, () => ({
@@ -180,7 +180,7 @@ export default function HitScene({ regionLabel, treeLabel, hammerId, onRoll, onE
     }
     frameId = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(frameId);
-  }, [hammerId, heroRows, treeRows]);
+  }, [tool, heroRows, treeRows]);
 
   const current = results[index];
   useEffect(() => {
@@ -189,7 +189,7 @@ export default function HitScene({ regionLabel, treeLabel, hammerId, onRoll, onE
     else playCatch();
   }, [phase, index, current]);
 
-  const level = strengthLevel(ui.count, hammerId);
+  const level = strengthLevel(ui.count, tool);
 
   return (
     <div className="hit-scene">
@@ -251,7 +251,7 @@ export default function HitScene({ regionLabel, treeLabel, hammerId, onRoll, onE
           <div className="hit-timer-fill" style={{ width: `${(ui.left / HIT_SECONDS) * 100}%` }} />
         </div>
         <p className="hit-count">
-          {phase === 'ready' ? `${HAMMERS[hammerId].name}` : `連打：${ui.count}回`}
+          {phase === 'ready' ? `使う道具：${tool.name}` : `連打：${ui.count}回`}
         </p>
         <p className="hit-strength">
           強さ

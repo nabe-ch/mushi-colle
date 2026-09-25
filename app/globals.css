@@ -571,6 +571,16 @@ button {
   border-color: var(--accent);
 }
 
+.shop-region {
+  margin-bottom: 14px;
+}
+
+.shop-region-title {
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
 .shop-name {
   font-weight: 700;
 }

@@ -1,9 +1,9 @@
 'use client';
 
-// ゲーム全体：タイトル → 世界地図 → 木を叩く、と、図鑑・ハンマーの購入
+// ゲーム全体：タイトル → 世界地図 → 木を叩く、と、図鑑・道具の購入（道具は地域ごとに別）
 import { useEffect, useState } from 'react';
 import { REGIONS } from '@/lib/insects';
-import { HAMMERS, applyDrops, rollDrops, loadSave, persistSave } from '@/lib/game';
+import { applyDrops, rollDrops, loadSave, persistSave, toolsOf, toolLevelOf, currentTool, buyNextTool } from '@/lib/game';
 import { startBgm, setMuted, isMuted, playTap, playBuy } from '@/lib/sound';
 import WorldMap from './WorldMap';
 import HitScene from './HitScene';
@@ -36,8 +36,6 @@ export default function Game() {
   }, []);
 
   const region = REGIONS.find((r) => r.id === regionId);
-  const hammer = HAMMERS[save.hammer];
-  const nextHammer = HAMMERS[save.hammer + 1] || null;
 
   function toggleMute() {
     const next = !muted;
@@ -46,15 +44,16 @@ export default function Game() {
   }
 
   function handleRoll(level) {
-    const drops = rollDrops(regionId, level, save.hammer);
+    const drops = rollDrops(regionId, level, toolLevelOf(save, regionId));
     const applied = applyDrops(save, drops);
     setSave(applied.save);
     return applied.results;
   }
 
-  function buyHammer() {
-    if (!nextHammer || save.coins < nextHammer.cost) return;
-    setSave({ ...save, coins: save.coins - nextHammer.cost, hammer: nextHammer.id });
+  function buyTool(id) {
+    const next = buyNextTool(save, id);
+    if (!next) return;
+    setSave(next);
     playBuy();
   }
 
@@ -81,7 +80,7 @@ export default function Game() {
         <p className="coins">コイン {save.coins}</p>
         <div className="topbar-buttons">
           <button type="button" className="btn btn-small" onClick={() => setShopOpen(true)}>
-            ハンマー
+            道具
           </button>
           <button type="button" className="btn btn-small" onClick={() => setZukanOpen(true)}>
             図鑑{save.newIds.length > 0 && <span className="new-dot">{save.newIds.length}</span>}
@@ -94,7 +93,7 @@ export default function Game() {
 
       {screen === 'map' && (
         <>
-          <p className="section-title">行き先をえらんでね（{hammer.name}）</p>
+          <p className="section-title">行き先をえらんでね</p>
           <WorldMap
             onSelect={(id) => {
               setRegionId(id);
@@ -109,7 +108,7 @@ export default function Game() {
           key={region.id}
           regionLabel={region.name}
           treeLabel={region.tree}
-          hammerId={save.hammer}
+          tool={currentTool(save, region.id)}
           onRoll={handleRoll}
           onExit={() => setScreen('map')}
         />
@@ -119,28 +118,38 @@ export default function Game() {
 
       {shopOpen && (
         <Modal onClose={() => setShopOpen(false)}>
-          <h2 className="modal-title">ハンマー</h2>
-          <p className="modal-hint">いいハンマーほど、少ない連打で強くたたけます。新しいハンマーで、めずらしい虫も出るようになります。</p>
-          <ul className="shop-list">
-            {HAMMERS.map((h) => (
-              <li key={h.id} className={`shop-item${h.id === save.hammer ? ' shop-item-current' : ''}`}>
-                <div>
-                  <p className="shop-name">
-                    {h.name}
-                    {h.id === save.hammer && <span className="shop-tag">使用中</span>}
-                    {h.id < save.hammer && <span className="shop-tag shop-tag-old">持っている</span>}
-                  </p>
-                  <p className="shop-desc">威力 ×{h.power}</p>
-                </div>
-                {h.id === save.hammer + 1 && (
-                  <button type="button" className="btn btn-small" disabled={save.coins < h.cost} onClick={buyHammer}>
-                    {h.cost}コインで買う
-                  </button>
-                )}
-                {h.id > save.hammer + 1 && <span className="shop-locked">{h.cost}コイン</span>}
-              </li>
-            ))}
-          </ul>
+          <h2 className="modal-title">道具</h2>
+          <p className="modal-hint">
+            道具は地域ごとに別です。いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。ほかの地域の道具の等級は、引き継がれません。
+          </p>
+          {REGIONS.filter((r) => r.available).map((r) => {
+            const level = toolLevelOf(save, r.id);
+            return (
+              <section key={r.id} className="shop-region">
+                <p className="shop-region-title">{r.name}</p>
+                <ul className="shop-list">
+                  {toolsOf(r.id).map((t, i) => (
+                    <li key={t.name} className={`shop-item${i === level ? ' shop-item-current' : ''}`}>
+                      <div>
+                        <p className="shop-name">
+                          {t.name}
+                          {i === level && <span className="shop-tag">使用中</span>}
+                          {i < level && <span className="shop-tag shop-tag-old">持っている</span>}
+                        </p>
+                        <p className="shop-desc">威力 ×{t.power}</p>
+                      </div>
+                      {i === level + 1 && (
+                        <button type="button" className="btn btn-small" disabled={save.coins < t.cost} onClick={() => buyTool(r.id)}>
+                          {t.cost}コインで買う
+                        </button>
+                      )}
+                      {i > level + 1 && <span className="shop-locked">{t.cost}コイン</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
         </Modal>
       )}
     </div>
