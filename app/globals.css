@@ -186,10 +186,137 @@ button {
   color: var(--muted);
 }
 
+.title-data-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.btn-danger {
+  background: #b8443a;
+  color: #fff;
+}
+
+.savedata-section {
+  margin: 12px 0;
+}
+
+.savedata-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.savedata-code {
+  width: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  word-break: break-all;
+  resize: vertical;
+}
+
+.savedata-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.savedata-confirm {
+  margin-top: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 0.85rem;
+}
+
+.savedata-message {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
 .title-note {
   margin-top: 10px;
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+/* エンディングムービー */
+.ending-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: #05080c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.ending-stage {
+  position: relative;
+  width: min(720px, 100%);
+  border: 3px solid var(--accent);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 0 0 3px #3a2c08;
+}
+
+.ending-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.ending-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24px 12px 12px;
+  text-align: center;
+  background: linear-gradient(rgba(5, 8, 12, 0), rgba(5, 8, 12, 0.86) 45%);
+}
+
+.ending-caption-main {
+  font-family: 'DotGothic16', sans-serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  text-shadow: 2px 2px 0 #3a2c08;
+}
+
+.ending-caption-sub {
+  font-size: 0.85rem;
+  color: #fff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.ending-stats {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.ending-buttons {
+  margin-top: 8px;
+}
+
+.ending-skip {
+  position: fixed;
+  right: 14px;
+  top: 14px;
+  z-index: 71;
+}
+
+.ending-replay {
+  margin-top: 10px;
 }
 
 /* 図鑑コンプリートのお祝い */

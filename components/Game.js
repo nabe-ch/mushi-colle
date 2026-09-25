@@ -14,6 +14,7 @@ import {
   buyNextTool,
   walletOf,
   formatMoney,
+  createInitialSave,
   isRegionComplete,
   cosmeticItems,
   cosmeticOf,
@@ -27,6 +28,8 @@ import HitScene from './HitScene';
 import ZukanScreen from './ZukanScreen';
 import Modal from './Modal';
 import TitleScreen from './TitleScreen';
+import SaveDataModal from './SaveDataModal';
+import EndingMovie from './EndingMovie';
 
 export default function Game() {
   const [save, setSave] = useState(loadSave);
@@ -35,6 +38,9 @@ export default function Game() {
   const [zukanOpen, setZukanOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [muted, setMutedState] = useState(isMuted);
+  const [saveDataOpen, setSaveDataOpen] = useState(false); // セーブデータ（バックアップ）の画面
+  const [resetOpen, setResetOpen] = useState(false); // 初期化の確認画面
+  const [endingPending, setEndingPending] = useState(false); // 全地域コンプリート：最後の地域のお祝いのあとに、エンディングを流す
   const [celebrateId, setCelebrateId] = useState(null); // 図鑑コンプリートのお祝いを出す地域（最後の結果カードのあとに表示）
 
   useEffect(() => {
@@ -67,7 +73,11 @@ export default function Game() {
     const applied = applyDrops(save, drops, regionId);
     setSave(applied.save);
     // この捕獲で、その地域の図鑑がそろったら、お祝いを予約する
-    if (!isRegionComplete(save, regionId) && isRegionComplete(applied.save, regionId)) setCelebrateId(regionId);
+    if (!isRegionComplete(save, regionId) && isRegionComplete(applied.save, regionId)) {
+      setCelebrateId(regionId);
+      // 全地域がそろったなら、お祝いのあとにエンディングムービー（ユーザー指定）
+      if (REGIONS.every((r) => isRegionComplete(applied.save, r.id))) setEndingPending(true);
+    }
     return applied.results;
   }
 
@@ -93,8 +103,53 @@ export default function Game() {
   }
 
   if (screen === 'title') {
-    return <TitleScreen dex={save.dex} onStart={() => setScreen('map')} />;
+    return (
+      <>
+        <TitleScreen
+          dex={save.dex}
+          onStart={() => setScreen('map')}
+          onOpenSaveData={() => setSaveDataOpen(true)}
+          onOpenReset={() => setResetOpen(true)}
+        />
+        {saveDataOpen && (
+          <SaveDataModal save={save} onImport={(loaded) => setSave(loaded)} onClose={() => setSaveDataOpen(false)} />
+        )}
+        {resetOpen && (
+          <Modal onClose={() => setResetOpen(false)}>
+            <h2 className="modal-title">初期化の確認</h2>
+            <p className="confirm-message">
+              図鑑（集めた虫 {Object.keys(save.dex).length}種）・お金・道具・木・服装など、すべてのデータが消えて、最初の状態に戻ります。
+              <br />
+              この操作は、元に戻せません。本当に初期化しますか？
+            </p>
+            <p className="modal-hint">大切なデータは、先に「セーブデータ」でバックアップしておくと安心です。</p>
+            <div className="confirm-buttons">
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => {
+                  setSave(createInitialSave());
+                  setCelebrateId(null);
+                  setResetOpen(false);
+                }}
+              >
+                初期化する
+              </button>
+              <button type="button" className="btn btn-sub" onClick={() => setResetOpen(false)}>
+                やめる
+              </button>
+            </div>
+          </Modal>
+        )}
+      </>
+    );
   }
+
+  if (screen === 'ending') {
+    return <EndingMovie save={save} onClose={() => setScreen('map')} />;
+  }
+
+  const allComplete = REGIONS.every((r) => isRegionComplete(save, r.id));
 
   return (
     <div className="game">
@@ -138,6 +193,11 @@ export default function Game() {
               setScreen('hit');
             }}
           />
+          {allComplete && (
+            <button type="button" className="btn btn-sub ending-replay" onClick={() => setScreen('ending')}>
+              エンディングを見る
+            </button>
+          )}
           <section className="howto">
             <h2 className="howto-title">あそびかた</h2>
             <ol className="howto-list">
@@ -161,7 +221,13 @@ export default function Game() {
           treeSkin={currentCosmetic(save, region.id, 'tree')}
           outfitKey={currentCosmetic(save, region.id, 'outfit').key}
           celebrateRegion={celebrateId === region.id ? region : null}
-          onCelebrated={() => setCelebrateId(null)}
+          onCelebrated={() => {
+            setCelebrateId(null);
+            if (endingPending) {
+              setEndingPending(false);
+              setScreen('ending');
+            }
+          }}
           onRoll={handleRoll}
           onExit={() => setScreen('map')}
         />

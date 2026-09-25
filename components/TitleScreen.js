@@ -11,7 +11,7 @@ import InsectArt from './InsectArt';
 const CYCLE_MS = 2600;
 
 // dex：図鑑に登録した虫。舞い降りる虫・並ぶ虫は、登録済みのものだけ（まだ見ていない虫を出さない＝ネタバレ防止。ユーザー指定）
-export default function TitleScreen({ dex, onStart }) {
+export default function TitleScreen({ dex, onStart, onOpenSaveData, onOpenReset }) {
   const canvasRef = useRef(null);
   const foundKey = INSECTS.filter((i) => dex[i.id]).map((i) => i.id).join(',');
   const found = useMemo(() => INSECTS.filter((i) => foundKey.split(',').includes(i.id)), [foundKey]);
@@ -88,6 +88,14 @@ export default function TitleScreen({ dex, onStart }) {
         <p className="title-hint">虫をつかまえると、ここに集まってくるよ！</p>
       )}
       <p className="title-note">ドット絵の図鑑をうめる、数分あそべるゲーム</p>
+      <div className="title-data-buttons">
+        <button type="button" className="btn btn-small btn-sub" onClick={onOpenSaveData}>
+          セーブデータ
+        </button>
+        <button type="button" className="btn btn-small btn-danger" onClick={onOpenReset}>
+          初期化
+        </button>
+      </div>
     </div>
   );
 }
