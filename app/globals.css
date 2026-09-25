@@ -343,6 +343,12 @@ button {
   margin-bottom: 12px;
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .coins {
   font-weight: 700;
   font-size: 1.1rem;
@@ -410,9 +416,17 @@ button {
 }
 
 .map-crown {
-  display: block;
-  margin-bottom: 1px;
+  /* 点の左に置く（ピンの高さを変えないので、上下のピンとかぶらない。日本は右端なので、右ではなく左に置く） */
+  position: absolute;
+  top: 7px;
+  right: calc(50% + 10px);
+  transform: translateY(-50%);
+  line-height: 0;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+}
+
+.map-crown .insect-art {
+  max-width: none;
 }
 
 .map-pin-label {

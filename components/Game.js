@@ -100,7 +100,19 @@ export default function Game() {
     <div className="game">
       <div className="topbar">
         {/* お金は、地域の画面（木をたたく場面）だけに表示する。行き先の画面には出さない（ユーザー指定） */}
-        <p className="coins">{screen === 'hit' && region ? formatMoney(walletOf(save, region.id), region.id) : ''}</p>
+        <div className="topbar-left">
+          {screen === 'map' && (
+            <button type="button" className="btn btn-small btn-sub" onClick={() => setScreen('title')}>
+              タイトルへ
+            </button>
+          )}
+          {screen === 'hit' && (
+            <button type="button" className="btn btn-small btn-sub" onClick={() => setScreen('map')}>
+              行き先へ
+            </button>
+          )}
+          <p className="coins">{screen === 'hit' && region ? formatMoney(walletOf(save, region.id), region.id) : ''}</p>
+        </div>
         <div className="topbar-buttons">
           {screen === 'hit' && (
             <button type="button" className="btn btn-small" onClick={() => setShopOpen(true)}>
