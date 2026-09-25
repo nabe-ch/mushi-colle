@@ -8,6 +8,7 @@ import { heroGrid, treeGrid } from '@/lib/sprites';
 import { HIT_SECONDS, MAX_STRENGTH, strengthLevel } from '@/lib/game';
 import { RARITY } from '@/lib/insects';
 import { playTick, playHit, playCatch, playNew } from '@/lib/sound';
+import { drawBackground } from '@/lib/scene';
 import InsectArt from './InsectArt';
 
 const COLS = 96;
@@ -20,30 +21,6 @@ const TREE_Y = 2;
 const HIT_MS = HIT_SECONDS * 1000;
 const SHAKE_MS = 900;
 const FADE_MS = 700;
-
-function fill(ctx, x, y, w, h, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x * DOT, y * DOT, w * DOT, h * DOT);
-}
-
-function drawBackground(ctx, scene) {
-  fill(ctx, 0, 0, COLS, 46, scene.sky);
-  for (const y of [6, 14, 22, 30]) fill(ctx, 0, y, COLS, 2, scene.sky2);
-  // 太陽
-  fill(ctx, 8, 5, 6, 6, scene.sun);
-  // 遠くの山
-  for (let x = 0; x < COLS; x++) {
-    const h = 8 + Math.round(5 * Math.sin(x / 9) + 3 * Math.sin(x / 4));
-    fill(ctx, x, 44 - h, 1, h + 2, scene.hill);
-  }
-  // 地面
-  fill(ctx, 0, 46, COLS, 14, scene.ground);
-  for (let i = 0; i < 40; i++) {
-    const x = (i * 37) % COLS;
-    const y = 47 + ((i * 11) % 12);
-    fill(ctx, x, y, 3, 1, scene.ground2);
-  }
-}
 
 export default function HitScene({ region, tool, onRoll, onExit }) {
   const regionLabel = region.name;

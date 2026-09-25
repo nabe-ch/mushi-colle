@@ -20,6 +20,7 @@ import WorldMap from './WorldMap';
 import HitScene from './HitScene';
 import ZukanScreen from './ZukanScreen';
 import Modal from './Modal';
+import TitleScreen from './TitleScreen';
 
 export default function Game() {
   const [save, setSave] = useState(loadSave);
@@ -73,32 +74,20 @@ export default function Game() {
   }
 
   if (screen === 'title') {
-    return (
-      <div className="title-screen">
-        <h1 className="title-logo">むしコレ</h1>
-        <p className="title-sub">～世界中のピクセルむしコレクション～</p>
-        <p className="title-lead">世界の木をたたいて、虫をあつめよう。</p>
-        <button type="button" className="btn btn-big" onClick={() => setScreen('map')}>
-          はじめる
-        </button>
-      </div>
-    );
+    return <TitleScreen onStart={() => setScreen('map')} />;
   }
 
   return (
     <div className="game">
       <div className="topbar">
-        <p className="coins">
-          {screen === 'hit' && region
-            ? formatMoney(walletOf(save, region.id), region.id)
-            : REGIONS.filter((r) => r.available)
-                .map((r) => `${r.name} ${formatMoney(walletOf(save, r.id), r.id)}`)
-                .join('　')}
-        </p>
+        {/* お金は、地域の画面（木をたたく場面）だけに表示する。行き先の画面には出さない（ユーザー指定） */}
+        <p className="coins">{screen === 'hit' && region ? formatMoney(walletOf(save, region.id), region.id) : ''}</p>
         <div className="topbar-buttons">
-          <button type="button" className="btn btn-small" onClick={() => setShopOpen(true)}>
-            道具
-          </button>
+          {screen === 'hit' && (
+            <button type="button" className="btn btn-small" onClick={() => setShopOpen(true)}>
+              道具
+            </button>
+          )}
           <button type="button" className="btn btn-small" onClick={() => setZukanOpen(true)}>
             図鑑{save.newIds.length > 0 && <span className="new-dot">{save.newIds.length}</span>}
           </button>
@@ -117,6 +106,18 @@ export default function Game() {
               setScreen('hit');
             }}
           />
+          <section className="howto">
+            <h2 className="howto-title">あそびかた</h2>
+            <ol className="howto-list">
+              <li>地図で行き先をえらぶと、その地域の木の前に立ちます。</li>
+              <li>画面をタップ（クリック）して連打！最初のタップから5秒間で、たくさん押すほど強く木をたたけます。（キーボードは使えません）</li>
+              <li>木がゆれて、虫が落ちてきます。強くたたくほど、たくさん、めずらしい虫が出やすくなります。</li>
+              <li>捕まえた虫は、その地域のお金になります。お金で、その地域の道具を強くできます。</li>
+              <li>強い道具にすると、もっとめずらしい虫が出るようになります。</li>
+              <li>虫は図鑑にたまります。全部あつめてコンプリートをめざそう！</li>
+            </ol>
+            <p className="howto-note">お金と道具は、地域ごとに別です。ほかの地域の道具やお金は使えません。</p>
+          </section>
         </>
       )}
 
@@ -130,20 +131,27 @@ export default function Game() {
         />
       )}
 
-      {zukanOpen && <ZukanScreen save={save} onSeen={markSeen} onClose={() => setZukanOpen(false)} />}
+      {zukanOpen && (
+        <ZukanScreen
+          save={save}
+          regionId={screen === 'hit' ? regionId : null}
+          onSeen={markSeen}
+          onClose={() => setZukanOpen(false)}
+        />
+      )}
 
-      {shopOpen && (
+      {shopOpen && region && (
         <Modal onClose={() => setShopOpen(false)}>
           <h2 className="modal-title">道具</h2>
           <p className="modal-hint">
-            道具とお金は、地域ごとに別です。いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。ほかの地域の道具の等級とお金は、引き継がれません。
+            いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。道具とお金は地域ごとに別で、ほかの地域には引き継がれません。
           </p>
-          {REGIONS.filter((r) => r.available).map((r) => {
+          {[region].map((r) => {
             const level = toolLevelOf(save, r.id);
             return (
               <section key={r.id} className="shop-region">
                 <p className="shop-region-title">
-                  {r.name}（所持金 {formatMoney(walletOf(save, r.id), r.id)}）
+                  {r.name}の道具（所持金 {formatMoney(walletOf(save, r.id), r.id)}）
                 </p>
                 <ul className="shop-list">
                   {toolsOf(r.id).map((t, i) => (

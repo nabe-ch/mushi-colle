@@ -7,10 +7,14 @@ import { REGIONS, INSECTS, RARITY, insectsOfRegion } from '@/lib/insects';
 import InsectArt from './InsectArt';
 import Modal from './Modal';
 
-export default function ZukanScreen({ save, onSeen, onClose }) {
+// regionId を渡すと、その地域の虫だけを表示する（2026-09-25、ユーザー指定：「図鑑も、その地域のぶんだけ」）。
+// 渡さない（地図の画面から開いた）ときは、全地域を表示する
+export default function ZukanScreen({ save, regionId, onSeen, onClose }) {
   const [selected, setSelected] = useState(null);
-  const total = INSECTS.length;
-  const got = Object.keys(save.dex).length;
+  const regions = regionId ? REGIONS.filter((r) => r.id === regionId) : REGIONS;
+  const scope = INSECTS.filter((i) => regions.some((r) => r.id === i.region));
+  const total = scope.length;
+  const got = scope.filter((i) => save.dex[i.id]).length;
 
   function open(insect) {
     setSelected(insect);
@@ -19,11 +23,11 @@ export default function ZukanScreen({ save, onSeen, onClose }) {
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="modal-title">むしコレ図鑑</h2>
+      <h2 className="modal-title">むしコレ図鑑{regionId && `（${regions[0].name}）`}</h2>
       <p className="modal-hint">
         集めた数：{got} / {total}（タップで詳しく見られます）
       </p>
-      {REGIONS.map((region) => {
+      {regions.map((region) => {
         const list = insectsOfRegion(region.id);
         return (
           <section key={region.id} className="zukan-region">
