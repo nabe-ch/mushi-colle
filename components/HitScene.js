@@ -45,7 +45,7 @@ function drawBackground(ctx) {
   }
 }
 
-export default function HitScene({ regionLabel, treeLabel, tool, onRoll, onExit }) {
+export default function HitScene({ regionLabel, treeLabel, currency, tool, onRoll, onExit }) {
   const canvasRef = useRef(null);
   const [phase, setPhase] = useState('ready'); // ready | counting | hit | fade | results
   const [ui, setUi] = useState({ count: 0, left: HIT_SECONDS });
@@ -226,7 +226,7 @@ export default function HitScene({ regionLabel, treeLabel, tool, onRoll, onExit 
               <p className="catch-rarity" style={{ color: RARITY[current.insect.rarity].color }}>
                 {RARITY[current.insect.rarity].label}
               </p>
-              <p className="catch-coin">+{current.price} コイン</p>
+              <p className="catch-coin">+{current.price}{currency}</p>
               {index < results.length - 1 ? (
                 <button type="button" className="btn" onClick={() => setIndex(index + 1)}>
                   つぎへ

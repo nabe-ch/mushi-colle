@@ -3,7 +3,18 @@
 // ゲーム全体：タイトル → 世界地図 → 木を叩く、と、図鑑・道具の購入（道具は地域ごとに別）
 import { useEffect, useState } from 'react';
 import { REGIONS } from '@/lib/insects';
-import { applyDrops, rollDrops, loadSave, persistSave, toolsOf, toolLevelOf, currentTool, buyNextTool } from '@/lib/game';
+import {
+  applyDrops,
+  rollDrops,
+  loadSave,
+  persistSave,
+  toolsOf,
+  toolLevelOf,
+  currentTool,
+  buyNextTool,
+  walletOf,
+  formatMoney,
+} from '@/lib/game';
 import { startBgm, setMuted, isMuted, playTap, playBuy } from '@/lib/sound';
 import WorldMap from './WorldMap';
 import HitScene from './HitScene';
@@ -45,7 +56,7 @@ export default function Game() {
 
   function handleRoll(level) {
     const drops = rollDrops(regionId, level, toolLevelOf(save, regionId));
-    const applied = applyDrops(save, drops);
+    const applied = applyDrops(save, drops, regionId);
     setSave(applied.save);
     return applied.results;
   }
@@ -77,7 +88,13 @@ export default function Game() {
   return (
     <div className="game">
       <div className="topbar">
-        <p className="coins">コイン {save.coins}</p>
+        <p className="coins">
+          {screen === 'hit' && region
+            ? formatMoney(walletOf(save, region.id), region.id)
+            : REGIONS.filter((r) => r.available)
+                .map((r) => `${r.name} ${formatMoney(walletOf(save, r.id), r.id)}`)
+                .join('　')}
+        </p>
         <div className="topbar-buttons">
           <button type="button" className="btn btn-small" onClick={() => setShopOpen(true)}>
             道具
@@ -108,6 +125,7 @@ export default function Game() {
           key={region.id}
           regionLabel={region.name}
           treeLabel={region.tree}
+          currency={region.currency}
           tool={currentTool(save, region.id)}
           onRoll={handleRoll}
           onExit={() => setScreen('map')}
@@ -120,13 +138,15 @@ export default function Game() {
         <Modal onClose={() => setShopOpen(false)}>
           <h2 className="modal-title">道具</h2>
           <p className="modal-hint">
-            道具は地域ごとに別です。いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。ほかの地域の道具の等級は、引き継がれません。
+            道具とお金は、地域ごとに別です。いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。ほかの地域の道具の等級とお金は、引き継がれません。
           </p>
           {REGIONS.filter((r) => r.available).map((r) => {
             const level = toolLevelOf(save, r.id);
             return (
               <section key={r.id} className="shop-region">
-                <p className="shop-region-title">{r.name}</p>
+                <p className="shop-region-title">
+                  {r.name}（所持金 {formatMoney(walletOf(save, r.id), r.id)}）
+                </p>
                 <ul className="shop-list">
                   {toolsOf(r.id).map((t, i) => (
                     <li key={t.name} className={`shop-item${i === level ? ' shop-item-current' : ''}`}>
@@ -139,11 +159,11 @@ export default function Game() {
                         <p className="shop-desc">威力 ×{t.power}</p>
                       </div>
                       {i === level + 1 && (
-                        <button type="button" className="btn btn-small" disabled={save.coins < t.cost} onClick={() => buyTool(r.id)}>
-                          {t.cost}コインで買う
+                        <button type="button" className="btn btn-small" disabled={walletOf(save, r.id) < t.cost} onClick={() => buyTool(r.id)}>
+                          {formatMoney(t.cost, r.id)}で買う
                         </button>
                       )}
-                      {i > level + 1 && <span className="shop-locked">{t.cost}コイン</span>}
+                      {i > level + 1 && <span className="shop-locked">{formatMoney(t.cost, r.id)}</span>}
                     </li>
                   ))}
                 </ul>
