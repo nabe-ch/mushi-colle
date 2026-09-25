@@ -10,8 +10,11 @@ import InsectArt from './InsectArt';
 
 const CYCLE_MS = 2600;
 
-export default function TitleScreen({ onStart }) {
+// dex：図鑑に登録した虫。舞い降りる虫・並ぶ虫は、登録済みのものだけ（まだ見ていない虫を出さない＝ネタバレ防止。ユーザー指定）
+export default function TitleScreen({ dex, onStart }) {
   const canvasRef = useRef(null);
+  const foundKey = INSECTS.filter((i) => dex[i.id]).map((i) => i.id).join(',');
+  const found = useMemo(() => INSECTS.filter((i) => foundKey.split(',').includes(i.id)), [foundKey]);
   const tool = REGIONS[0].tools[0];
   const hero = useMemo(
     () => ({
@@ -40,10 +43,10 @@ export default function TitleScreen({ onStart }) {
       drawRows(ctx, tree, 44 + dx, 2, SCENE_DOT);
       drawRows(ctx, hero[pose], 22, 13, SCENE_DOT);
       // 舞い降りる虫（全種類を、少しずつずらして降らせる）
-      INSECTS.forEach((insect, i) => {
+      found.forEach((insect, i) => {
         const speed = 0.045;
         const span = SCENE_ROWS * SCENE_DOT + 90;
-        const y = ((t * speed + i * (span / INSECTS.length)) % span) - 64;
+        const y = ((t * speed + i * (span / found.length)) % span) - 64;
         const x = 20 + ((i * 53) % (SCENE_COLS * SCENE_DOT - 90)) + Math.sin(t / 500 + i) * 10;
         ctx.globalAlpha = y > 300 ? Math.max(0, 1 - (y - 300) / 50) : 1;
         drawRows(ctx, insect.grid, x / 2, y / 2, 2);
@@ -53,7 +56,7 @@ export default function TitleScreen({ onStart }) {
     }
     frameId = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(frameId);
-  }, [hero, tree]);
+  }, [hero, tree, found]);
 
   return (
     <div className="title-screen">
@@ -73,13 +76,17 @@ export default function TitleScreen({ onStart }) {
       <button type="button" className="btn btn-big title-start" onClick={onStart}>
         はじめる
       </button>
-      <ul className="title-bugs">
-        {INSECTS.map((insect, i) => (
-          <li key={insect.id} style={{ animationDelay: `${(i % 5) * 0.15}s` }}>
-            <InsectArt rows={insect.grid} dot={2} />
-          </li>
-        ))}
-      </ul>
+      {found.length > 0 ? (
+        <ul className="title-bugs">
+          {found.map((insect, i) => (
+            <li key={insect.id} style={{ animationDelay: `${(i % 5) * 0.15}s` }}>
+              <InsectArt rows={insect.grid} dot={2} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="title-hint">虫をつかまえると、ここに集まってくるよ！</p>
+      )}
       <p className="title-note">ドット絵の図鑑をうめる、数分あそべるゲーム</p>
     </div>
   );

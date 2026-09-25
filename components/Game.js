@@ -14,6 +14,12 @@ import {
   buyNextTool,
   walletOf,
   formatMoney,
+  isRegionComplete,
+  cosmeticItems,
+  cosmeticOf,
+  currentCosmetic,
+  buyCosmetic,
+  selectCosmetic,
 } from '@/lib/game';
 import { startBgm, setMuted, isMuted, playTap, playBuy } from '@/lib/sound';
 import WorldMap from './WorldMap';
@@ -29,6 +35,7 @@ export default function Game() {
   const [zukanOpen, setZukanOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [muted, setMutedState] = useState(isMuted);
+  const [celebrateId, setCelebrateId] = useState(null); // 図鑑コンプリートのお祝いを出す地域（最後の結果カードのあとに表示）
 
   useEffect(() => {
     persistSave(save);
@@ -59,6 +66,8 @@ export default function Game() {
     const drops = rollDrops(regionId, level, toolLevelOf(save, regionId));
     const applied = applyDrops(save, drops, regionId);
     setSave(applied.save);
+    // この捕獲で、その地域の図鑑がそろったら、お祝いを予約する
+    if (!isRegionComplete(save, regionId) && isRegionComplete(applied.save, regionId)) setCelebrateId(regionId);
     return applied.results;
   }
 
@@ -69,12 +78,22 @@ export default function Game() {
     playBuy();
   }
 
+  function buyOrSelect(type, index) {
+    const cur = cosmeticOf(save, regionId, type);
+    const next = cur.owned.includes(index)
+      ? selectCosmetic(save, regionId, type, index)
+      : buyCosmetic(save, regionId, type, index);
+    if (!next) return;
+    setSave(next);
+    if (!cur.owned.includes(index)) playBuy();
+  }
+
   function markSeen(id) {
     setSave((prev) => (prev.newIds.includes(id) ? { ...prev, newIds: prev.newIds.filter((n) => n !== id) } : prev));
   }
 
   if (screen === 'title') {
-    return <TitleScreen onStart={() => setScreen('map')} />;
+    return <TitleScreen dex={save.dex} onStart={() => setScreen('map')} />;
   }
 
   return (
@@ -85,7 +104,7 @@ export default function Game() {
         <div className="topbar-buttons">
           {screen === 'hit' && (
             <button type="button" className="btn btn-small" onClick={() => setShopOpen(true)}>
-              道具
+              ショップ
             </button>
           )}
           <button type="button" className="btn btn-small" onClick={() => setZukanOpen(true)}>
@@ -101,6 +120,7 @@ export default function Game() {
         <>
           <p className="section-title">行き先をえらんでね</p>
           <WorldMap
+            completed={REGIONS.filter((r) => isRegionComplete(save, r.id)).map((r) => r.id)}
             onSelect={(id) => {
               setRegionId(id);
               setScreen('hit');
@@ -126,6 +146,10 @@ export default function Game() {
           key={region.id}
           region={region}
           tool={currentTool(save, region.id)}
+          treeSkin={currentCosmetic(save, region.id, 'tree')}
+          outfitKey={currentCosmetic(save, region.id, 'outfit').key}
+          celebrateRegion={celebrateId === region.id ? region : null}
+          onCelebrated={() => setCelebrateId(null)}
           onRoll={handleRoll}
           onExit={() => setScreen('map')}
         />
@@ -142,9 +166,9 @@ export default function Game() {
 
       {shopOpen && region && (
         <Modal onClose={() => setShopOpen(false)}>
-          <h2 className="modal-title">道具</h2>
+          <h2 className="modal-title">ショップ</h2>
           <p className="modal-hint">
-            いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。道具とお金は地域ごとに別で、ほかの地域には引き継がれません。
+            いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。木や服装は、見た目だけが変わります。道具・木・服装・お金は地域ごとに別で、ほかの地域には引き継がれません。
           </p>
           {[region].map((r) => {
             const level = toolLevelOf(save, r.id);
@@ -170,6 +194,43 @@ export default function Game() {
                         </button>
                       )}
                       {i > level + 1 && <span className="shop-locked">{formatMoney(t.cost, r.id)}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+          {[
+            { type: 'tree', title: '木' },
+            { type: 'outfit', title: '服装' },
+          ].map(({ type, title }) => {
+            const cur = cosmeticOf(save, region.id, type);
+            return (
+              <section key={type} className="shop-region">
+                <p className="shop-region-title">{title}</p>
+                <ul className="shop-list">
+                  {cosmeticItems(region.id, type).map((item, i) => (
+                    <li key={item.id} className={`shop-item${i === cur.selected ? ' shop-item-current' : ''}`}>
+                      <p className="shop-name">
+                        {item.name}
+                        {i === cur.selected && <span className="shop-tag">使用中</span>}
+                        {i !== cur.selected && cur.owned.includes(i) && <span className="shop-tag shop-tag-old">持っている</span>}
+                      </p>
+                      {i !== cur.selected && cur.owned.includes(i) && (
+                        <button type="button" className="btn btn-small" onClick={() => buyOrSelect(type, i)}>
+                          つかう
+                        </button>
+                      )}
+                      {!cur.owned.includes(i) && (
+                        <button
+                          type="button"
+                          className="btn btn-small"
+                          disabled={walletOf(save, region.id) < item.cost}
+                          onClick={() => buyOrSelect(type, i)}
+                        >
+                          {formatMoney(item.cost, region.id)}で買う
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>

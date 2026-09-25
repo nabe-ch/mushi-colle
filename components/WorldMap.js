@@ -4,6 +4,8 @@
 import { useEffect, useRef } from 'react';
 import { REGIONS } from '@/lib/insects';
 import { ellipse, createGrid } from '@/lib/pixel';
+import { crownGrid } from '@/lib/sprites';
+import InsectArt from './InsectArt';
 
 const COLS = 96;
 const ROWS = 48;
@@ -32,7 +34,8 @@ function drawMap(ctx) {
   }
 }
 
-export default function WorldMap({ onSelect }) {
+// completed：図鑑をコンプリートした地域のID（王冠を付ける）
+export default function WorldMap({ onSelect, completed = [] }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -52,6 +55,11 @@ export default function WorldMap({ onSelect }) {
           disabled={!region.available}
           onClick={() => onSelect(region.id)}
         >
+          {completed.includes(region.id) && (
+            <span className="map-crown" aria-label="図鑑コンプリート">
+              <InsectArt rows={crownGrid()} dot={2} />
+            </span>
+          )}
           <span className="map-pin-dot" />
           <span className="map-pin-label">
             {region.name}

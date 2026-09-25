@@ -9,7 +9,9 @@ import { HIT_SECONDS, MAX_STRENGTH, strengthLevel } from '@/lib/game';
 import { RARITY } from '@/lib/insects';
 import { playTick, playHit, playCatch, playNew } from '@/lib/sound';
 import { drawBackground } from '@/lib/scene';
+import { playFanfare } from '@/lib/sound';
 import InsectArt from './InsectArt';
+import CompleteCelebration from './CompleteCelebration';
 
 const COLS = 96;
 const ROWS = 60;
@@ -22,7 +24,7 @@ const HIT_MS = HIT_SECONDS * 1000;
 const SHAKE_MS = 900;
 const FADE_MS = 700;
 
-export default function HitScene({ region, tool, onRoll, onExit }) {
+export default function HitScene({ region, tool, treeSkin, outfitKey, celebrateRegion, onCelebrated, onRoll, onExit }) {
   const regionLabel = region.name;
   const treeLabel = region.tree;
   const currency = region.currency;
@@ -31,6 +33,22 @@ export default function HitScene({ region, tool, onRoll, onExit }) {
   const [ui, setUi] = useState({ count: 0, left: HIT_SECONDS });
   const [results, setResults] = useState([]);
   const [index, setIndex] = useState(0);
+  const [celebrating, setCelebrating] = useState(false); // 図鑑コンプリートのお祝いを表示中か（3秒）
+  const [celebrated, setCelebrated] = useState(false);
+  const celebrateTimerRef = useRef(null);
+
+  // 図鑑コンプリートのお祝いを、3秒間出す
+  function startCelebration() {
+    setCelebrating(true);
+    playFanfare();
+    celebrateTimerRef.current = setTimeout(() => {
+      setCelebrating(false);
+      setCelebrated(true);
+      onCelebrated();
+    }, 3000);
+  }
+
+  useEffect(() => () => clearTimeout(celebrateTimerRef.current), []);
 
   const phaseRef = useRef('ready');
   const startRef = useRef(0);
@@ -47,13 +65,13 @@ export default function HitScene({ region, tool, onRoll, onExit }) {
 
   const heroRows = useMemo(
     () => ({
-      idle: heroGrid('idle', tool, region.outfit),
-      windup: heroGrid('windup', tool, region.outfit),
-      hit: heroGrid('hit', tool, region.outfit),
+      idle: heroGrid('idle', tool, outfitKey),
+      windup: heroGrid('windup', tool, outfitKey),
+      hit: heroGrid('hit', tool, outfitKey),
     }),
-    [tool, region.outfit]
+    [tool, outfitKey]
   );
-  const treeRows = useMemo(() => treeGrid(region.treeKind), [region.treeKind]);
+  const treeRows = useMemo(() => treeGrid(treeSkin.kind, treeSkin.variant), [treeSkin.kind, treeSkin.variant]);
 
   function tap() {
     const now = performance.now();
@@ -80,6 +98,7 @@ export default function HitScene({ region, tool, onRoll, onExit }) {
     setUi({ count: 0, left: HIT_SECONDS });
     setResults([]);
     setIndex(0);
+    setCelebrated(false);
   }
 
   useEffect(() => {
@@ -210,6 +229,10 @@ export default function HitScene({ region, tool, onRoll, onExit }) {
                 <button type="button" className="btn" onClick={() => setIndex(index + 1)}>
                   つぎへ
                 </button>
+              ) : celebrateRegion && !celebrated ? (
+                <button type="button" className="btn" onClick={startCelebration} disabled={celebrating}>
+                  つぎへ
+                </button>
               ) : (
                 <div className="catch-buttons">
                   <button type="button" className="btn" onClick={reset}>
@@ -239,6 +262,8 @@ export default function HitScene({ region, tool, onRoll, onExit }) {
           ))}
         </p>
       </div>
+
+      {celebrating && celebrateRegion && <CompleteCelebration region={celebrateRegion} />}
 
       {phase === 'ready' && (
         <button type="button" className="btn btn-sub hit-back" onClick={onExit}>
