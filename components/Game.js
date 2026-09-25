@@ -123,9 +123,7 @@ export default function Game() {
       {screen === 'hit' && region && (
         <HitScene
           key={region.id}
-          regionLabel={region.name}
-          treeLabel={region.tree}
-          currency={region.currency}
+          region={region}
           tool={currentTool(save, region.id)}
           onRoll={handleRoll}
           onExit={() => setScreen('map')}

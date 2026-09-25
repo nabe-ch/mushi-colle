@@ -26,26 +26,29 @@ function fill(ctx, x, y, w, h, color) {
   ctx.fillRect(x * DOT, y * DOT, w * DOT, h * DOT);
 }
 
-function drawBackground(ctx) {
-  fill(ctx, 0, 0, COLS, 46, '#8fd0ec');
-  for (const y of [6, 14, 22, 30]) fill(ctx, 0, y, COLS, 2, '#a5dcf2');
+function drawBackground(ctx, scene) {
+  fill(ctx, 0, 0, COLS, 46, scene.sky);
+  for (const y of [6, 14, 22, 30]) fill(ctx, 0, y, COLS, 2, scene.sky2);
   // 太陽
-  fill(ctx, 8, 5, 6, 6, '#f6e27a');
+  fill(ctx, 8, 5, 6, 6, scene.sun);
   // 遠くの山
   for (let x = 0; x < COLS; x++) {
     const h = 8 + Math.round(5 * Math.sin(x / 9) + 3 * Math.sin(x / 4));
-    fill(ctx, x, 44 - h, 1, h + 2, '#7fb069');
+    fill(ctx, x, 44 - h, 1, h + 2, scene.hill);
   }
   // 地面
-  fill(ctx, 0, 46, COLS, 14, '#5c8a4a');
+  fill(ctx, 0, 46, COLS, 14, scene.ground);
   for (let i = 0; i < 40; i++) {
     const x = (i * 37) % COLS;
     const y = 47 + ((i * 11) % 12);
-    fill(ctx, x, y, 3, 1, '#4d7a3d');
+    fill(ctx, x, y, 3, 1, scene.ground2);
   }
 }
 
-export default function HitScene({ regionLabel, treeLabel, currency, tool, onRoll, onExit }) {
+export default function HitScene({ region, tool, onRoll, onExit }) {
+  const regionLabel = region.name;
+  const treeLabel = region.tree;
+  const currency = region.currency;
   const canvasRef = useRef(null);
   const [phase, setPhase] = useState('ready'); // ready | counting | hit | fade | results
   const [ui, setUi] = useState({ count: 0, left: HIT_SECONDS });
@@ -65,16 +68,15 @@ export default function HitScene({ regionLabel, treeLabel, currency, tool, onRol
   const onRollRef = useRef(onRoll);
   onRollRef.current = onRoll;
 
-  const hammerColor = tool.color;
   const heroRows = useMemo(
     () => ({
-      idle: heroGrid('idle', hammerColor),
-      windup: heroGrid('windup', hammerColor),
-      hit: heroGrid('hit', hammerColor),
+      idle: heroGrid('idle', tool, region.outfit),
+      windup: heroGrid('windup', tool, region.outfit),
+      hit: heroGrid('hit', tool, region.outfit),
     }),
-    [hammerColor]
+    [tool, region.outfit]
   );
-  const treeRows = useMemo(() => treeGrid(), []);
+  const treeRows = useMemo(() => treeGrid(region.treeKind), [region.treeKind]);
 
   function tap() {
     const now = performance.now();
@@ -142,7 +144,7 @@ export default function HitScene({ regionLabel, treeLabel, currency, tool, onRol
 
       // 描画
       const cur = phaseRef.current;
-      drawBackground(ctx);
+      drawBackground(ctx, region.scene);
       let dx = 0;
       let alpha = 1;
       let pose = 'idle';
@@ -180,7 +182,7 @@ export default function HitScene({ regionLabel, treeLabel, currency, tool, onRol
     }
     frameId = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(frameId);
-  }, [tool, heroRows, treeRows]);
+  }, [tool, region, heroRows, treeRows]);
 
   const current = results[index];
   useEffect(() => {
