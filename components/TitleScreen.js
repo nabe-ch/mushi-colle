@@ -15,6 +15,18 @@ export default function TitleScreen({ dex, onStart, onOpenSaveData, onOpenReset 
   const canvasRef = useRef(null);
   const foundKey = INSECTS.filter((i) => dex[i.id]).map((i) => i.id).join(',');
   const found = useMemo(() => INSECTS.filter((i) => foundKey.split(',').includes(i.id)), [foundKey]);
+  // 舞い降りる虫は、密集しないよう最大8匹に間引く（登録数が多いときは、均等に選ぶ）
+  const falling = useMemo(() => {
+    const max = 8;
+    if (found.length <= max) return found;
+    return Array.from({ length: max }, (_, k) => found[Math.floor((k * found.length) / max)]);
+  }, [found]);
+  // 下の一覧も、最大16匹に間引く
+  const listed = useMemo(() => {
+    const max = 16;
+    if (found.length <= max) return found;
+    return Array.from({ length: max }, (_, k) => found[Math.floor((k * found.length) / max)]);
+  }, [found]);
   const tool = REGIONS[0].tools[0];
   const hero = useMemo(
     () => ({
@@ -43,11 +55,13 @@ export default function TitleScreen({ dex, onStart, onOpenSaveData, onOpenReset 
       drawRows(ctx, tree, 44 + dx, 2, SCENE_DOT);
       drawRows(ctx, hero[pose], 22, 13, SCENE_DOT);
       // 舞い降りる虫（全種類を、少しずつずらして降らせる）
-      found.forEach((insect, i) => {
+      falling.forEach((insect, i) => {
         const speed = 0.045;
         const span = SCENE_ROWS * SCENE_DOT + 90;
-        const y = ((t * speed + i * (span / found.length)) % span) - 64;
-        const x = 20 + ((i * 53) % (SCENE_COLS * SCENE_DOT - 90)) + Math.sin(t / 500 + i) * 10;
+        const y = ((t * speed + i * (span / falling.length)) % span) - 64;
+        // 横は8つの枠に分け、となり同士（続けて降る虫）が並ばない順番にする
+        const slot = (i * 3) % 8;
+        const x = 14 + slot * ((SCENE_COLS * SCENE_DOT - 28 - 64) / 7) + Math.sin(t / 500 + i) * 6;
         ctx.globalAlpha = y > 300 ? Math.max(0, 1 - (y - 300) / 50) : 1;
         drawRows(ctx, insect.grid, x / 2, y / 2, 2);
         ctx.globalAlpha = 1;
@@ -56,7 +70,7 @@ export default function TitleScreen({ dex, onStart, onOpenSaveData, onOpenReset 
     }
     frameId = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(frameId);
-  }, [hero, tree, found]);
+  }, [hero, tree, falling]);
 
   return (
     <div className="title-screen">
@@ -78,7 +92,7 @@ export default function TitleScreen({ dex, onStart, onOpenSaveData, onOpenReset 
       </button>
       {found.length > 0 ? (
         <ul className="title-bugs">
-          {found.map((insect, i) => (
+          {listed.map((insect, i) => (
             <li key={insect.id} style={{ animationDelay: `${(i % 5) * 0.15}s` }}>
               <InsectArt rows={insect.grid} dot={2} />
             </li>

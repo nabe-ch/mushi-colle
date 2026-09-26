@@ -264,7 +264,7 @@ export default function Game() {
                           {i === level && <span className="shop-tag">使用中</span>}
                           {i < level && <span className="shop-tag shop-tag-old">持っている</span>}
                         </p>
-                        <p className="shop-desc">威力 ×{t.power}</p>
+                        <p className="shop-desc">威力 ×{t.power}{t.luck ? '・レア虫が出やすい' : ''}</p>
                       </div>
                       {i === level + 1 && (
                         <button type="button" className="btn btn-small" disabled={walletOf(save, r.id) < t.cost} onClick={() => buyTool(r.id)}>

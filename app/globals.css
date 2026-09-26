@@ -162,8 +162,9 @@ button {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 4px;
+  gap: 14px 22px;
   margin-top: 18px;
+  padding: 0 12px;
 }
 
 .title-bugs li {
