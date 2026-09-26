@@ -138,7 +138,8 @@ export default function EndingMovie({ save, onClose }) {
         const targetX = 12 + i * step;
         const startX = 380 + (i % 5) * 20;
         const x = p >= 1 ? targetX : startX + (targetX - startX) * easeOut(p);
-        const y = p >= 1 ? 250 : 60 + 190 * p * p;
+        // 下の字幕（暗い帯）にかからないよう、高めの位置に並べる
+        const y = p >= 1 ? 218 : 60 + 158 * p * p;
         drawRows(ctx, bug.grid, x, y, 1);
       });
       if (lt > 3900) {
