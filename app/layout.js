@@ -2,7 +2,7 @@ import './globals.css';
 
 export const metadata = {
   title: 'むしコレ ～世界中のピクセルむしコレクション～',
-  description: '世界の木をたたいて虫をあつめる、ドット絵の図鑑コンプリートゲーム（開発中）',
+  description: '世界の木をたたいて虫をあつめる、ドット絵の図鑑コンプリートゲーム',
 };
 
 export const viewport = {
