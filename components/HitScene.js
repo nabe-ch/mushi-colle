@@ -4,7 +4,7 @@
 // キーボード（Enterなど）では操作できない：連打を受けるのは、ボタンではなく、ポインタ（マウス・タッチ）だけに反応する領域
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PALETTE, drawRows } from '@/lib/pixel';
-import { heroGrid, treeGrid } from '@/lib/sprites';
+import { heroGrid, treeGrid, drawAura } from '@/lib/sprites';
 import { HIT_SECONDS, MAX_STRENGTH, strengthLevel } from '@/lib/game';
 import { RARITY } from '@/lib/insects';
 import { playTick, playHit, playCatch, playNew } from '@/lib/sound';
@@ -174,6 +174,7 @@ export default function HitScene({ region, tool, treeSkin, outfitKey, celebrateR
         ctx.globalAlpha = 1;
       }
       drawRows(ctx, heroRows[pose], HERO_X, HERO_Y, DOT);
+      drawAura(ctx, tool, pose, HERO_X, HERO_Y, DOT, now);
       frameId = requestAnimationFrame(frame);
     }
     frameId = requestAnimationFrame(frame);

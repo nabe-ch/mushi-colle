@@ -5,7 +5,7 @@
 //        ④ユニークな（架空の）15種のスポットライト ⑤花火とTHE END
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { drawRows } from '@/lib/pixel';
-import { heroGrid, treeGrid, crownGrid } from '@/lib/sprites';
+import { heroGrid, treeGrid, crownGrid, drawAura } from '@/lib/sprites';
 import { drawBackground, SCENE_COLS, SCENE_ROWS, SCENE_DOT } from '@/lib/scene';
 import { REGIONS, INSECTS, insectsOfRegion } from '@/lib/insects';
 import { currentTool, currentCosmetic } from '@/lib/game';
@@ -58,6 +58,7 @@ export default function EndingMovie({ save, onClose }) {
         const outfit = currentCosmetic(save, region.id, 'outfit').key;
         return {
           region,
+          tool,
           tree: treeGrid(treeSkin.kind, treeSkin.variant),
           hero: {
             idle: heroGrid('idle', tool, outfit),
@@ -127,6 +128,7 @@ export default function EndingMovie({ save, onClose }) {
       if (hitting && cycle >= 600) dx = Math.round(Math.sin((cycle - 600) / 30) * 3 * Math.exp(-(cycle - 600) / 200));
       drawRows(ctx, d.tree, 44 + dx, 2, SCENE_DOT);
       drawRows(ctx, d.hero[pose], 22, 13, SCENE_DOT);
+      drawAura(ctx, d.tool, pose, 22, 13, SCENE_DOT, performance.now());
       // 虫が、木から落ちてきて、地面に並ぶ
       d.bugs.forEach((bug, i) => {
         const p = (lt - (600 + i * 180)) / 900;
