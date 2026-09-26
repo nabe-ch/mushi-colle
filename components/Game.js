@@ -20,6 +20,7 @@ import {
   cosmeticOf,
   currentCosmetic,
   buyCosmetic,
+  buyEarth,
   selectCosmetic,
 } from '@/lib/game';
 import { startBgm, setMuted, isMuted, playTap, playBuy, playMoonAppear } from '@/lib/sound';
@@ -30,6 +31,7 @@ import Modal from './Modal';
 import TitleScreen from './TitleScreen';
 import SaveDataModal from './SaveDataModal';
 import EndingMovie from './EndingMovie';
+import EarthPurchase from './EarthPurchase';
 
 export default function Game() {
   const [save, setSave] = useState(loadSave);
@@ -41,6 +43,7 @@ export default function Game() {
   const [saveDataOpen, setSaveDataOpen] = useState(false); // セーブデータ（バックアップ）の画面
   const [resetOpen, setResetOpen] = useState(false); // 初期化の確認画面
   const [endingPending, setEndingPending] = useState(false); // 全地域コンプリート：最後の地域のお祝いのあとに、エンディングを流す
+  const [earthOpen, setEarthOpen] = useState(false); // 「地球」を買ったあとのメッセージ
   const [moonAnnounce, setMoonAnnounce] = useState(false); // エンディングのあと、月が現れたお知らせ
   const [celebrateId, setCelebrateId] = useState(null); // 図鑑コンプリートのお祝いを出す地域（最後の結果カードのあとに表示）
 
@@ -103,6 +106,15 @@ export default function Game() {
   function chooseTool(id, index) {
     if (index < 0 || index >= toolsOf(id).length) return;
     setSave((prev) => ({ ...prev, tools: { ...prev.tools, [id]: index } }));
+  }
+
+  function buyEarthItem() {
+    const next = buyEarth(save);
+    if (!next) return;
+    setSave(next);
+    playBuy();
+    setShopOpen(false);
+    setEarthOpen(true);
   }
 
   function markSeen(id) {
@@ -364,8 +376,43 @@ export default function Game() {
               </section>
             );
           })}
+          {region.special && (
+            <section className="shop-region">
+              <p className="shop-region-title">
+                特別商品（所持金 {formatMoney(walletOf(save, region.id), region.id)}）
+              </p>
+              <ul className="shop-list">
+                <li className="shop-item">
+                  <div>
+                    <p className="shop-name">
+                      {region.special.name}
+                      {save.earthBought && <span className="shop-tag shop-tag-old">購入済み</span>}
+                    </p>
+                    <p className="shop-desc">
+                      {save.earthBought ? 'あなたのものでは、ありません。' : '青くて、丸い。在庫は1つ（たぶん）。'}
+                    </p>
+                  </div>
+                  {save.earthBought ? (
+                    <button type="button" className="btn btn-small" onClick={() => { setShopOpen(false); setEarthOpen(true); }}>
+                      領収書を見る
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-small"
+                      disabled={walletOf(save, region.id) < region.special.cost}
+                      onClick={buyEarthItem}
+                    >
+                      {formatMoney(region.special.cost, region.id)}で買う
+                    </button>
+                  )}
+                </li>
+              </ul>
+            </section>
+          )}
         </Modal>
       )}
+      {earthOpen && <EarthPurchase onClose={() => setEarthOpen(false)} />}
     </div>
   );
 }

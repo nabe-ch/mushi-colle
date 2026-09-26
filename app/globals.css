@@ -1101,3 +1101,81 @@ button {
   line-height: 1.7;
   margin-bottom: 14px;
 }
+
+/* 月の「地球」を買ったあとの、メッセージ画面 */
+.earth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 6, 20, 0.88);
+}
+
+.earth-card {
+  width: min(340px, 100%);
+  text-align: center;
+  background: #12183a;
+  border: 3px solid #7aa8e8;
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 3px #1d2a5a, 0 0 32px rgba(90, 150, 240, 0.45);
+  padding: 18px 16px;
+}
+
+.earth-art {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+  line-height: 0;
+}
+
+.earth-art-1 {
+  animation: earth-smug 1.2s ease-in-out infinite;
+}
+
+.earth-art-2 {
+  animation: earth-shake 0.5s ease-in-out infinite;
+}
+
+@keyframes earth-smug {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes earth-shake {
+  0%,
+  100% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+.earth-title {
+  font-family: 'DotGothic16', sans-serif;
+  font-size: 1.15rem;
+  color: #ffe27a;
+  margin-bottom: 6px;
+}
+
+.earth-text {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+
+.earth-sub {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
