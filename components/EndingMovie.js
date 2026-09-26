@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { drawRows } from '@/lib/pixel';
 import { heroGrid, treeGrid, crownGrid, drawAura } from '@/lib/sprites';
 import { drawBackground, SCENE_COLS, SCENE_ROWS, SCENE_DOT } from '@/lib/scene';
-import { REGIONS, INSECTS, insectsOfRegion } from '@/lib/insects';
+import { MAIN_REGIONS as REGIONS, insectsOfRegion } from '@/lib/insects';
 import { currentTool, currentCosmetic } from '@/lib/game';
 import { playFanfare, playCatch, playNew } from '@/lib/sound';
 
@@ -255,7 +255,7 @@ export default function EndingMovie({ save, onClose }) {
           {finished && (
             <>
               <p className="ending-stats">
-                集めた虫：{Object.keys(save.dex).length} / {INSECTS.length}種　捕まえた数：{totalCatches}匹
+                集めた虫：{allBugs.filter((b) => save.dex[b.id]).length} / {allBugs.length}種　捕まえた数：{totalCatches}匹
               </p>
               <div className="ending-buttons">
                 <button type="button" className="btn" onClick={onClose}>

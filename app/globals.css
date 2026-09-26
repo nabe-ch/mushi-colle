@@ -1014,3 +1014,90 @@ button {
   opacity: 0.15;
   cursor: default;
 }
+
+/* 月（エンディングのあとに現れる隠し行き先） */
+.map-pin-moon .map-pin-dot {
+  width: 22px;
+  height: 22px;
+  background: #fff3b0;
+  border-color: #ffe27a;
+  box-shadow: 0 0 12px 4px rgba(255, 240, 160, 0.8);
+}
+
+.map-pin-moon .map-pin-label {
+  color: #fff3b0;
+}
+
+.map-pin-appear {
+  animation: moon-rise 1.6s ease-out both;
+}
+
+@keyframes moon-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 60%) scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.moon-announce {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 6, 20, 0.82);
+  animation: moon-announce-in 0.5s ease-out both;
+}
+
+@keyframes moon-announce-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.moon-announce-card {
+  width: min(340px, 100%);
+  text-align: center;
+  background: #12183a;
+  border: 3px solid #ffe27a;
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 3px #3a2c08, 0 0 40px rgba(255, 240, 160, 0.45);
+  padding: 20px 16px;
+}
+
+.moon-announce-moon {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fffbe0, #f3dc8a 60%, #cdb662);
+  box-shadow: 0 0 30px 8px rgba(255, 240, 160, 0.6);
+}
+
+.moon-announce-title {
+  font-family: 'DotGothic16', sans-serif;
+  font-size: 1.5rem;
+  color: #ffe27a;
+  margin-bottom: 8px;
+}
+
+.moon-announce-text {
+  color: #fff;
+  line-height: 1.7;
+  margin-bottom: 14px;
+}

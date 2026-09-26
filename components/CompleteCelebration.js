@@ -12,11 +12,28 @@ export default function CompleteCelebration({ region }) {
         <div className="complete-crown">
           <InsectArt rows={crownGrid()} dot={10} />
         </div>
-        <p className="complete-title">図鑑コンプリート！</p>
+        <p className="complete-title">{region.celebration?.title ?? '図鑑コンプリート！'}</p>
         <p className="complete-message">
-          {region.name}の虫を、ぜんぶ集めました！
-          <br />
-          おめでとう！
+          {region.celebration ? (
+            region.celebration.message.split('\n').map((line, i) => (
+              <span key={i}>
+                {i > 0 && <br />}
+                {line}
+              </span>
+            ))
+          ) : (
+            <>
+              {region.name}の虫を、ぜんぶ集めました！
+              <br />
+              おめでとう！
+            </>
+          )}
+          {region.celebration && (
+            <>
+              <br />
+              おめでとう！
+            </>
+          )}
         </p>
         <ul className="complete-bugs">
           {insectsOfRegion(region.id).map((insect) => (

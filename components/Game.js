@@ -2,7 +2,7 @@
 
 // ゲーム全体：タイトル → 世界地図 → 木を叩く、と、図鑑・道具の購入（道具は地域ごとに別）
 import { useEffect, useState } from 'react';
-import { REGIONS } from '@/lib/insects';
+import { REGIONS, MAIN_REGIONS } from '@/lib/insects';
 import {
   applyDrops,
   rollDrops,
@@ -22,7 +22,7 @@ import {
   buyCosmetic,
   selectCosmetic,
 } from '@/lib/game';
-import { startBgm, setMuted, isMuted, playTap, playBuy } from '@/lib/sound';
+import { startBgm, setMuted, isMuted, playTap, playBuy, playMoonAppear } from '@/lib/sound';
 import WorldMap from './WorldMap';
 import HitScene from './HitScene';
 import ZukanScreen from './ZukanScreen';
@@ -41,6 +41,7 @@ export default function Game() {
   const [saveDataOpen, setSaveDataOpen] = useState(false); // セーブデータ（バックアップ）の画面
   const [resetOpen, setResetOpen] = useState(false); // 初期化の確認画面
   const [endingPending, setEndingPending] = useState(false); // 全地域コンプリート：最後の地域のお祝いのあとに、エンディングを流す
+  const [moonAnnounce, setMoonAnnounce] = useState(false); // エンディングのあと、月が現れたお知らせ
   const [celebrateId, setCelebrateId] = useState(null); // 図鑑コンプリートのお祝いを出す地域（最後の結果カードのあとに表示）
 
   useEffect(() => {
@@ -76,7 +77,7 @@ export default function Game() {
     if (!isRegionComplete(save, regionId) && isRegionComplete(applied.save, regionId)) {
       setCelebrateId(regionId);
       // 全地域がそろったなら、お祝いのあとにエンディングムービー（ユーザー指定）
-      if (REGIONS.every((r) => isRegionComplete(applied.save, r.id))) setEndingPending(true);
+      if (!region.secret && MAIN_REGIONS.every((r) => isRegionComplete(applied.save, r.id))) setEndingPending(true);
     }
     return applied.results;
   }
@@ -146,10 +147,24 @@ export default function Game() {
   }
 
   if (screen === 'ending') {
-    return <EndingMovie save={save} onClose={() => setScreen('map')} />;
+    return (
+      <EndingMovie
+        save={save}
+        onClose={() => {
+          // 初めてエンディングを見終わったとき（スキップも含む）、行き先に「月」が現れる
+          if (!save.endingSeen) {
+            setSave((prev) => ({ ...prev, endingSeen: true }));
+            setMoonAnnounce(true);
+            playMoonAppear();
+          }
+          setScreen('map');
+        }}
+      />
+    );
   }
 
-  const allComplete = REGIONS.every((r) => isRegionComplete(save, r.id));
+  const allComplete = MAIN_REGIONS.every((r) => isRegionComplete(save, r.id));
+  const visibleRegions = REGIONS.filter((r) => !r.secret || save.endingSeen);
 
   return (
     <div className="game">
@@ -187,7 +202,9 @@ export default function Game() {
         <>
           <p className="section-title">行き先をえらんでね</p>
           <WorldMap
-            completed={REGIONS.filter((r) => isRegionComplete(save, r.id)).map((r) => r.id)}
+            regions={visibleRegions}
+            appearing={moonAnnounce ? 'moon' : null}
+            completed={visibleRegions.filter((r) => isRegionComplete(save, r.id)).map((r) => r.id)}
             onSelect={(id) => {
               setRegionId(id);
               setScreen('hit');
@@ -231,6 +248,23 @@ export default function Game() {
           onRoll={handleRoll}
           onExit={() => setScreen('map')}
         />
+      )}
+
+      {moonAnnounce && screen === 'map' && (
+        <div className="moon-announce" role="dialog">
+          <div className="moon-announce-card">
+            <div className="moon-announce-moon" />
+            <p className="moon-announce-title">月への道が、ひらけた！</p>
+            <p className="moon-announce-text">
+              世界地図の夜空に、「月」が現れた。
+              <br />
+              月には、ここでしか会えない、ユニークな虫が3種いるらしい…！
+            </p>
+            <button type="button" className="btn" onClick={() => setMoonAnnounce(false)}>
+              月へ向かう準備をする
+            </button>
+          </div>
+        </div>
       )}
 
       {zukanOpen && (

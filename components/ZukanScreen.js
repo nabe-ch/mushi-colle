@@ -11,7 +11,8 @@ import Modal from './Modal';
 // 渡さない（地図の画面から開いた）ときは、全地域を表示する
 export default function ZukanScreen({ save, regionId, onSeen, onClose }) {
   const [selected, setSelected] = useState(null);
-  const regions = regionId ? REGIONS.filter((r) => r.id === regionId) : REGIONS;
+  // 月は、エンディングを見たあとにだけ表示する（ネタバレ防止）
+  const regions = regionId ? REGIONS.filter((r) => r.id === regionId) : REGIONS.filter((r) => !r.secret || save.endingSeen);
   const scope = INSECTS.filter((i) => regions.some((r) => r.id === i.region));
   const total = scope.length;
   const got = scope.filter((i) => save.dex[i.id]).length;

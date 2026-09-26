@@ -35,7 +35,7 @@ function drawMap(ctx) {
 }
 
 // completed：図鑑をコンプリートした地域のID（王冠を付ける）
-export default function WorldMap({ onSelect, completed = [] }) {
+export default function WorldMap({ onSelect, regions = REGIONS, completed = [], appearing = null }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -46,11 +46,11 @@ export default function WorldMap({ onSelect, completed = [] }) {
   return (
     <div className="world-map">
       <canvas ref={canvasRef} width={COLS * DOT} height={ROWS * DOT} className="world-map-canvas" />
-      {REGIONS.map((region) => (
+      {regions.map((region) => (
         <button
           key={region.id}
           type="button"
-          className={`map-pin${region.available ? '' : ' map-pin-locked'}`}
+          className={`map-pin${region.available ? '' : ' map-pin-locked'}${region.secret ? ' map-pin-moon' : ''}${appearing === region.id ? ' map-pin-appear' : ''}`}
           style={{ left: `${region.pin.x}%`, top: `${region.pin.y}%` }}
           disabled={!region.available}
           onClick={() => onSelect(region.id)}
