@@ -1,7 +1,7 @@
 'use client';
 
 // エンディングムービー（すべての地域の図鑑をコンプリートしたあと、最後の地域のお祝いのあとに流れる。約70秒。スキップできる）。
-// 構成：①タイトル ②5地域をめぐる旅（木をたたいて、その地域の虫15種が集まる）③全75種のパレード
+// 構成：①タイトル ②5地域をめぐる旅（木をたたいて、その地域の虫が集まる）③全81種のパレード
 //        ④ユニークな（架空の）15種のスポットライト ⑤花火とTHE END
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { drawRows } from '@/lib/pixel';
@@ -133,7 +133,9 @@ export default function EndingMovie({ save, onClose }) {
       d.bugs.forEach((bug, i) => {
         const p = (lt - (600 + i * 180)) / 900;
         if (p < 0) return;
-        const targetX = 28 + i * 36;
+        // 虫の数が増えても、画面の幅（576）に収まるように、間隔を縮める
+        const step = Math.min(36, (SCENE_COLS * SCENE_DOT - 56) / Math.max(1, d.bugs.length - 1));
+        const targetX = 12 + i * step;
         const startX = 380 + (i % 5) * 20;
         const x = p >= 1 ? targetX : startX + (targetX - startX) * easeOut(p);
         const y = p >= 1 ? 250 : 60 + 190 * p * p;
