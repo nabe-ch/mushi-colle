@@ -42,7 +42,7 @@ const QUIPS = {
 const TITLE_MS = 3200;
 const REGION_MS = 4800;
 const PARADE_MS = 11000;
-const UNIQUE_MS = 1700;
+const UNIQUE_MS = 2100; // ユニークな虫1匹ぶんの長さ（1700から0.4秒のばした。ユーザー指定、2026-09-26）
 
 function easeOut(p) {
   return 1 - (1 - p) * (1 - p);
