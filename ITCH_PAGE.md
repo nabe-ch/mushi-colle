@@ -14,7 +14,7 @@
 - **Release status**：Released
 
 ## アップロード
-- ファイル：`C:\Users\user\Desktop\code\mushi-colle\dist\mushi-colle-itch.zip`（zipを選び、「This file will be played in the browser」にチェック）
+- ファイル：`C:\Users\user\Desktop\code\mushi-colle\dist\mushi-colle-itch-v3.zip`（zipを選び、「This file will be played in the browser」にチェック）
 - **Embed options（表示）**：Viewport dimensions は「800 × 600」、**Mobile friendly** にチェック、**Fullscreen button** にチェック
 - **Frame options**：Automatically start on page load は、オフ（音が出るため。タップで開始）
 
