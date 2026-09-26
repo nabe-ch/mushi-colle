@@ -99,6 +99,12 @@ export default function Game() {
     if (!cur.owned.includes(index)) playBuy();
   }
 
+  // 月のように、道具を買わずに自由に選べる地域
+  function chooseTool(id, index) {
+    if (index < 0 || index >= toolsOf(id).length) return;
+    setSave((prev) => ({ ...prev, tools: { ...prev.tools, [id]: index } }));
+  }
+
   function markSeen(id) {
     setSave((prev) => (prev.newIds.includes(id) ? { ...prev, newIds: prev.newIds.filter((n) => n !== id) } : prev));
   }
@@ -258,7 +264,9 @@ export default function Game() {
             <p className="moon-announce-text">
               世界地図の夜空に、「月」が現れた。
               <br />
-              月には、ここでしか会えない、ユニークな虫が3種いるらしい…！
+              月には、ここでしか会えない、ユニークな虫が5種いるらしい…！
+              <br />
+              SFな道具も、好きなものを選べるようだ。
             </p>
             <button type="button" className="btn" onClick={() => setMoonAnnounce(false)}>
               月へ向かう準備をする
@@ -280,14 +288,16 @@ export default function Game() {
         <Modal onClose={() => setShopOpen(false)}>
           <h2 className="modal-title">ショップ</h2>
           <p className="modal-hint">
-            いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。木や服装は、見た目だけが変わります。道具・木・服装・お金は地域ごとに別で、ほかの地域には引き継がれません。
+            {region.freeTools
+              ? '月の道具は、どれも最高の威力です。買う必要はなく、好きなものを自由に選べます。木や服装は、見た目だけが変わります。'
+              : 'いい道具ほど、少ない連打で強くたたけて、めずらしい虫も出るようになります。木や服装は、見た目だけが変わります。道具・木・服装・お金は地域ごとに別で、ほかの地域には引き継がれません。'}
           </p>
           {[region].map((r) => {
             const level = toolLevelOf(save, r.id);
             return (
               <section key={r.id} className="shop-region">
                 <p className="shop-region-title">
-                  {r.name}の道具（所持金 {formatMoney(walletOf(save, r.id), r.id)}）
+                  {r.name}の道具（{r.freeTools ? '好きなものを選べます' : `所持金 ${formatMoney(walletOf(save, r.id), r.id)}`}）
                 </p>
                 <ul className="shop-list">
                   {toolsOf(r.id).map((t, i) => (
@@ -296,16 +306,21 @@ export default function Game() {
                         <p className="shop-name">
                           {t.name}
                           {i === level && <span className="shop-tag">使用中</span>}
-                          {i < level && <span className="shop-tag shop-tag-old">持っている</span>}
+                          {i < level && !r.freeTools && <span className="shop-tag shop-tag-old">持っている</span>}
                         </p>
                         <p className="shop-desc">威力 ×{t.power}{t.luck ? '・レア虫が出やすい' : ''}</p>
                       </div>
-                      {i === level + 1 && (
+                      {r.freeTools && i !== level && (
+                        <button type="button" className="btn btn-small" onClick={() => chooseTool(r.id, i)}>
+                          つかう
+                        </button>
+                      )}
+                      {!r.freeTools && i === level + 1 && (
                         <button type="button" className="btn btn-small" disabled={walletOf(save, r.id) < t.cost} onClick={() => buyTool(r.id)}>
                           {formatMoney(t.cost, r.id)}で買う
                         </button>
                       )}
-                      {i > level + 1 && <span className="shop-locked">{formatMoney(t.cost, r.id)}</span>}
+                      {!r.freeTools && i > level + 1 && <span className="shop-locked">{formatMoney(t.cost, r.id)}</span>}
                     </li>
                   ))}
                 </ul>
