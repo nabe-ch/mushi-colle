@@ -138,8 +138,8 @@ export default function EndingMovie({ save, onClose }) {
         const targetX = 12 + i * step;
         const startX = 380 + (i % 5) * 20;
         const x = p >= 1 ? targetX : startX + (targetX - startX) * easeOut(p);
-        // 下の字幕（暗い帯）にかからないよう、高めの位置に並べる
-        const y = p >= 1 ? 218 : 60 + 158 * p * p;
+        // 画面の縦の真ん中（高さ360の半分＝180が、虫の中心）に並べる（ユーザー指定）
+        const y = p >= 1 ? 164 : 60 + 104 * p * p;
         drawRows(ctx, bug.grid, x, y, 1);
       });
       if (lt > 3900) {
@@ -157,7 +157,8 @@ export default function EndingMovie({ save, onClose }) {
       allBugs.forEach((bug, i) => {
         const x = -64 + lt * speed - i * 72;
         if (x < -70 || x > W + 4) return;
-        const y = 190 + Math.sin(lt / 120 + i) * 5;
+        // 虫（64px）の中心が、画面の縦の真ん中（180）になる高さ（ユーザー指定）
+        const y = 148 + Math.sin(lt / 120 + i) * 5;
         drawRows(ctx, bug.grid, x / 2, y / 2, 2);
       });
       setCap('parade', 'みんな、ありがとう！', '集めた虫、全' + allBugs.length + '種');
