@@ -1,14 +1,15 @@
 'use client';
 
 // エンディングムービー（すべての地域の図鑑をコンプリートしたあと、最後の地域のお祝いのあとに流れる。約70秒。スキップできる）。
-// 構成：①タイトル ②5地域をめぐる旅（木をたたいて、その地域の虫が集まる）③全81種のパレード
+// 月の図鑑もコンプリートしているときは、月の場面・月の虫のパレード・月のユニークも加わる（ユーザー指定、2026-09-26）。
+// 構成：①タイトル ②5地域（＋月）をめぐる旅（木をたたいて、その地域の虫が集まる）③全81種のパレード
 //        ④ユニークな（架空の）15種のスポットライト ⑤花火とTHE END
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { drawRows } from '@/lib/pixel';
 import { heroGrid, treeGrid, crownGrid, drawAura } from '@/lib/sprites';
 import { drawBackground, SCENE_COLS, SCENE_ROWS, SCENE_DOT } from '@/lib/scene';
-import { MAIN_REGIONS as REGIONS, insectsOfRegion } from '@/lib/insects';
-import { currentTool, currentCosmetic } from '@/lib/game';
+import { MAIN_REGIONS, getRegion, insectsOfRegion } from '@/lib/insects';
+import { currentTool, currentCosmetic, isRegionComplete } from '@/lib/game';
 import { playFanfare, playCatch, playNew } from '@/lib/sound';
 
 const W = SCENE_COLS * SCENE_DOT;
@@ -31,6 +32,11 @@ const QUIPS = {
   af_baobab: '非常用のお水は、もう飲んじゃった。',
   af_safari: '見つける動物より、撮られる側。',
   af_kilimanjaro: '頂上の景色は、雲で見えない。',
+  moon_mochi: 'ついた餅は、なぜか毎回ちょっと大きい。',
+  moon_walk: '前に進んでるつもり。ほんとうに。',
+  moon_dango: '食べないで。ぼくは虫です。',
+  moon_warp: 'いま、ここに来たところ。さっきも、ここにいた。',
+  moon_rocket: '10、9、8、7…もう出発！',
 };
 
 const TITLE_MS = 3200;
@@ -49,7 +55,10 @@ export default function EndingMovie({ save, onClose }) {
   const captionKeyRef = useRef('');
   const soundKeyRef = useRef('');
 
-  // 5地域ぶんの絵（木・主人公・虫）を用意する
+  // 月の図鑑もそろっているとき（moonDone）は、月も、めぐる地域に加える
+  const moonDone = isRegionComplete(save, 'moon');
+  const REGIONS = useMemo(() => (moonDone ? [...MAIN_REGIONS, getRegion('moon')] : MAIN_REGIONS), [moonDone]);
+  // 地域ぶんの絵（木・主人公・虫）を用意する
   const regionData = useMemo(
     () =>
       REGIONS.map((region) => {
@@ -68,9 +77,9 @@ export default function EndingMovie({ save, onClose }) {
           bugs: insectsOfRegion(region.id),
         };
       }),
-    [save]
+    [save, REGIONS]
   );
-  const allBugs = useMemo(() => REGIONS.flatMap((r) => insectsOfRegion(r.id)), []);
+  const allBugs = useMemo(() => REGIONS.flatMap((r) => insectsOfRegion(r.id)), [REGIONS]);
   const uniques = useMemo(() => allBugs.filter((b) => b.rarity === 'unique'), [allBugs]);
   const crown = useMemo(() => crownGrid(), []);
   const totalCatches = Object.values(save.dex).reduce((sum, v) => sum + (v?.count || 0), 0);
@@ -113,7 +122,7 @@ export default function EndingMovie({ save, onClose }) {
       const pop = Math.min(1, lt / 600);
       const dot = Math.max(1, Math.round(9 * easeOut(pop)));
       drawRows(ctx, crown, (W / 2 - 8 * dot) / dot, (H / 2 - 6 * dot - 20) / dot, dot);
-      setCap('title', '世界中の虫を、ぜんぶあつめた！', 'おめでとう！　図鑑、完全コンプリート');
+      setCap('title', '世界中の虫を、ぜんぶあつめた！', moonDone ? 'おめでとう！　地球も、月も、図鑑完全コンプリート' : 'おめでとう！　図鑑、完全コンプリート');
       sound('title', playFanfare);
     }
 
@@ -244,7 +253,7 @@ export default function EndingMovie({ save, onClose }) {
     }
     frameId = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(frameId);
-  }, [regionData, allBugs, uniques, crown, PARADE_START, UNIQUE_START, FINALE_START]);
+  }, [regionData, allBugs, uniques, crown, moonDone, PARADE_START, UNIQUE_START, FINALE_START]);
 
   return (
     <div className="ending-overlay">
