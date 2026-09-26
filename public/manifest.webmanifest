@@ -1,0 +1,17 @@
+{
+  "name": "むしコレ ～世界中のピクセルむしコレクション～",
+  "short_name": "むしコレ",
+  "description": "世界の木をたたいて虫をあつめる、ドット絵の図鑑コンプリートゲーム",
+  "lang": "ja",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#14261c",
+  "theme_color": "#14261c",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
