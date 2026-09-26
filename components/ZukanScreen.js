@@ -2,7 +2,7 @@
 
 // 図鑑。捕まえた虫だけ絵と名前が見える。未発見は黒いシルエットと「？」。
 // タップすると詳細（大きい絵・レア度・名前・大きさ・説明文）。新種は「NEW」を表示し、詳細を見ると消える
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { REGIONS, INSECTS, RARITY, insectsOfRegion } from '@/lib/insects';
 import InsectArt from './InsectArt';
 import Modal from './Modal';
@@ -15,6 +15,23 @@ export default function ZukanScreen({ save, regionId, onSeen, onClose }) {
   const scope = INSECTS.filter((i) => regions.some((r) => r.id === i.region));
   const total = scope.length;
   const got = scope.filter((i) => save.dex[i.id]).length;
+
+  // 詳細で前後に移れる順番＝図鑑の並び（登録済みの虫だけ。未発見は、ネタバレ防止のため飛ばす）
+  const browsable = regions.flatMap((r) => insectsOfRegion(r.id)).filter((i) => save.dex[i.id]);
+  const pos = selected ? browsable.findIndex((i) => i.id === selected.id) : -1;
+  const prev = pos > 0 ? browsable[pos - 1] : null;
+  const next = pos >= 0 && pos < browsable.length - 1 ? browsable[pos + 1] : null;
+
+  // キーボードの左右キーでも前後に移れる
+  useEffect(() => {
+    if (!selected) return undefined;
+    function onKey(e) {
+      if (e.key === 'ArrowLeft' && prev) open(prev);
+      if (e.key === 'ArrowRight' && next) open(next);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   function open(insect) {
     setSelected(insect);
@@ -66,16 +83,28 @@ export default function ZukanScreen({ save, regionId, onSeen, onClose }) {
 
       {selected && (
         <Modal onClose={() => setSelected(null)}>
-          <div className="detail-art">
-            <InsectArt rows={selected.grid} dot={9} />
+          <div className="detail-nav">
+            <button type="button" className="detail-arrow" disabled={!prev} onClick={() => open(prev)} aria-label={prev ? '前の虫：' + prev.name : '前の虫はいません'}>
+              ◀
+            </button>
+            <div className="detail-body">
+              <div className="detail-art">
+                <InsectArt rows={selected.grid} dot={9} />
+              </div>
+              <p className="detail-rarity" style={{ color: RARITY[selected.rarity].color }}>
+                {RARITY[selected.rarity].label}
+              </p>
+              <h3 className="detail-name">{selected.name}</h3>
+              <p className="detail-size">大きさ：{selected.sizeText}</p>
+              <p className="detail-desc">{selected.description}</p>
+              <p className="detail-count">
+                捕まえた回数：{save.dex[selected.id]?.count ?? 0}（{pos + 1} / {browsable.length}）
+              </p>
+            </div>
+            <button type="button" className="detail-arrow" disabled={!next} onClick={() => open(next)} aria-label={next ? '次の虫：' + next.name : '次の虫はいません'}>
+              ▶
+            </button>
           </div>
-          <p className="detail-rarity" style={{ color: RARITY[selected.rarity].color }}>
-            {RARITY[selected.rarity].label}
-          </p>
-          <h3 className="detail-name">{selected.name}</h3>
-          <p className="detail-size">大きさ：{selected.sizeText}</p>
-          <p className="detail-desc">{selected.description}</p>
-          <p className="detail-count">捕まえた回数：{save.dex[selected.id]?.count ?? 0}</p>
         </Modal>
       )}
     </Modal>

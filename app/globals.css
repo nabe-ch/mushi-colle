@@ -974,3 +974,30 @@ button {
   background: var(--border);
   color: var(--ink);
 }
+
+/* 図鑑の詳細：左右の矢印で、前後の虫（登録済みのもの）へ移る */
+.detail-nav {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.detail-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-arrow {
+  flex: 0 0 40px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.detail-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
